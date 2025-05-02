@@ -55,7 +55,8 @@ def _extract_message_len(data):
 
 def _preprocess(reviews):
     '''
-    1. Convert
+    1. Convert word tokens from processed msgs dataframe into a bag of words
+    2. Add message length
     '''
     preprocessor = make_union(
         CountVectorizer(max_features=1420,

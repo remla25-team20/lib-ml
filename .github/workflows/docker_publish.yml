@@ -1,0 +1,71 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["v[0-9]+.[0-9]+.[0-9]+"]
+
+permissions:
+  contents: write  # to delete tags
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get tag message
+        id: tagmsg
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          MESSAGE=$(git for-each-ref --format='%(contents)' ${GITHUB_REF})
+          echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+
+      - name: Cancel if tag message is not a version bump
+        if: ${{ startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          echo "Tag message starts with 'Bump version'. Skipping workflow."
+          exit 1
+
+      - name: Parse version info from tag
+        run: |
+          # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
+          VERSION=${GITHUB_REF:11}
+          MAJOR=`echo "$VERSION" | cut -d . -f 1`
+          MINOR=`echo "$VERSION" | cut -d . -f 2`
+          PATCH=`echo "$VERSION" | cut -d . -f 3`
+          echo "version=$VERSION" >> $GITHUB_ENV
+          echo "version_major=$MAJOR" >> $GITHUB_ENV
+          echo "version_minor=$MINOR" >> $GITHUB_ENV
+          echo "version_patch=$PATCH" >> $GITHUB_ENV
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure Git user
+        run: |
+          git config user.name "Adrian Josan"
+          git config user.email "a.josan@tudelft.nl"
+
+#      the version bump action will try to create a new tag to link the commit with the updated packaging version to it
+      - name: Delete tag version
+        run: |
+          git push origin --delete v${{ env.version }}
+
+      - name: Bump lib-ml package version
+        id: bump
+        uses: callowayproject/bump-my-version@master
+        env:
+          BUMPVERSION_COMMIT: "true"
+          BUMPVERSION_TAG: "true"
+          BUMPVERSION_TAG_NAME: "v${{ env.version }}-release"
+        with:
+          args: --new-version ${{ env.version }} -v
+          github-token: ${{ secrets.GH_TOKEN }}
+          branch: main
+
+      - name: Check if bumped
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          echo "Version was bumped from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}!"

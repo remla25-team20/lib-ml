@@ -12,7 +12,7 @@ preprocessed_data = preprocess(path: Path)
 
 ## Output
 
-Calling `preprocess()` will also write two files into `./Output/`:
+Calling `preprocess()` will also write two files into `./output/`:
 - preprocessor.joblib
 - preprocessed_data.joblib
 

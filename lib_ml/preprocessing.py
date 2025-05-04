@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import re
 
+from pathlib import Path
+
 import nltk
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -14,24 +16,18 @@ nltk.download('stopwords')
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.preprocessing import FunctionTransformer
-from sklearn.pipeline import make_union, make_pipeline
-from joblib import dump, load
+from sklearn.pipeline import make_union
+from joblib import dump
 
 
-def _load_data():
+def _load_data(path: Path):
     reviews = pd.read_csv(
-        'a1_RestaurantReviews_HistoricDump.tsv', 
+        path, 
         delimiter='\t', 
         quoting=3)
     return reviews
 
-def _text_process(text):
-    '''
-    1. Remove all non-alphabetic characters
-    2. Convert to lowercase
-    3. Remove stopwords
-    4. Stem the words
-    '''
+def _text_process(text: str):
     all_stopwords = stopwords.words('english')
     all_stopwords.remove('not')
     ps = PorterStemmer()
@@ -49,15 +45,12 @@ def _text_process(text):
     return clean_rvws
 
 def _extract_message_len(data):
-    # return as np.array and reshape so that it works with make_union
     return np.array([len(message) for message in data]).reshape(-1, 1)
 
 
-def _preprocess(reviews):
-    '''
-    1. Convert word tokens from processed msgs dataframe into a bag of words
-    2. Add message length
-    '''
+def preprocess(path: Path):
+    reviews = _load_data(path)
+
     preprocessor = make_union(
         CountVectorizer(max_features=1420,
                         analyzer=_text_process),
@@ -68,10 +61,3 @@ def _preprocess(reviews):
     dump(preprocessor, 'Output/preprocessor.joblib')
     dump(preprocessed_data, 'Output/preprocessed_data.joblib')
     return preprocessed_data
-
-def main():
-    reviews = _load_data()
-    _preprocess(reviews)
-
-if __name__ == '__main__':
-    main()

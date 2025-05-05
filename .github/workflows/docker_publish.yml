@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: $RELEASE_BRANCH
+          ref: ${{ RELEASE_BRANCH }}
           fetch-depth: 0
 
       - name: Get tag message
@@ -58,7 +58,7 @@ jobs:
         with:
           args: --new-version ${{ env.version }} -v
           github-token: ${{ secrets.GH_TOKEN }}
-          branch: $RELEASE_BRANCH
+          branch: ${{ RELEASE_BRANCH }}
 
       - name: Set git remote env variable
         if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}

@@ -1,3 +1,5 @@
-venv/
+*venv/
 *vscode/
 Output/
+dist/
+lib_ml/__pycache__/

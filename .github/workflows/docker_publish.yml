@@ -4,8 +4,11 @@ on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+"]
 
+env:
+  RELEASE_BRANCH: "auto-release-lib-ml"
+
 permissions:
-  contents: write  # to delete tags
+  contents: write  # Allows deleting tags
 
 jobs:
   build:
@@ -14,8 +17,8 @@ jobs:
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_TOKEN }}
-          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: $RELEASE_BRANCH
           fetch-depth: 0
 
       - name: Get tag message
@@ -29,9 +32,10 @@ jobs:
         if: ${{ startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
         run: |
           echo "Tag message starts with 'Bump version'. Skipping workflow."
-          exit 1
+#          exit 1
 
       - name: Parse version info from tag
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
         run: |
           # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
           VERSION=${GITHUB_REF:11}
@@ -43,29 +47,45 @@ jobs:
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
 
-      - name: Configure Git user
-        run: |
-          git config user.name "Adrian Josan"
-          git config user.email "a.josan@tudelft.nl"
-
-#      the version bump action will try to create a new tag to link the commit with the updated packaging version to it
-      - name: Delete tag version
-        run: |
-          git push origin --delete v${{ env.version }}
+#    TODO: checkout branch on which the tag was created (not linked to tag, need to search (branch -r ...))
 
       - name: Bump lib-ml package version
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
         id: bump
         uses: callowayproject/bump-my-version@master
         env:
           BUMPVERSION_COMMIT: "true"
-          BUMPVERSION_TAG: "true"
-          BUMPVERSION_TAG_NAME: "v${{ env.version }}-release"
         with:
           args: --new-version ${{ env.version }} -v
           github-token: ${{ secrets.GH_TOKEN }}
-          branch: main
+          branch: $RELEASE_BRANCH
+
+      - name: Set git remote env variable
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          REMOTE_REPO="https://${GITHUB_ACTOR}:${{ secrets.GH_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+          echo "remote_repo=$REMOTE_REPO" >> $GITHUB_ENV
+
+      - name: Delete tag version
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          git tag --delete v${{ env.version }}
+          git push "${{ env.remote_repo }}" --delete ${GITHUB_REF}
+          git tag -l
+
+      - name: Create and push new release branch
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          git checkout -b "v${{ env.version }}"
+          git push "${{ env.remote_repo }}" "refs/heads/v${{ env.version }}"
+
+      - name: Re-tag version for the new commit
+        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          git tag -f v${{ env.version }} -m 'Bump version: from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}'
+          git push "${{ env.remote_repo }}" -f "refs/tags/v${{ env.version }}"
 
       - name: Check if bumped
-        if: steps.bump.outputs.bumped == 'true'
+        if: steps.bump.outputs.bumped == 'true' && !startsWith(steps.tagmsg.outputs.message, 'Bump version')
         run: |
           echo "Version was bumped from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}!"

@@ -22,6 +22,7 @@ jobs:
         id: tagmsg
         run: |
           # Show 1st line of tag and message, extract the message part, and get the first two words after tag name
+          echo "tag description = $(git tag -l -n1 "v${{ env.version }}")"
           MESSAGE=$(git tag -l -n1 "v${{ env.version }}" | awk '{if (NF >= 3) print $2 " " $3 }')
           echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
           echo "message=$MESSAGE"

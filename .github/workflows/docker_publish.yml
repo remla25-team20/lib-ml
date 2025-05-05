@@ -18,21 +18,7 @@ jobs:
           ref: ${{ vars.RELEASE_BRANCH }}
           fetch-depth: 0
 
-      - name: Get tag message
-        id: tagmsg
-        run: |
-          # Show 1st line of tag and message, extract the message part, and get the first two words after tag name
-          MESSAGE=$(git tag -l -n1 "v${{ env.version }}" | awk '{if (NF >= 3) print $2 " " $3 }')
-          echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
-
-      - name: Cancel if tag message is not a version bump
-        if: ${{ startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
-        run: |
-          echo "Tag message starts with 'Bump version'. Skipping workflow."
-#          exit 1
-
       - name: Parse version info from tag
-        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
         run: |
           # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
           VERSION=${GITHUB_REF:11}
@@ -43,6 +29,21 @@ jobs:
           echo "version_major=$MAJOR" >> $GITHUB_ENV
           echo "version_minor=$MINOR" >> $GITHUB_ENV
           echo "version_patch=$PATCH" >> $GITHUB_ENV
+
+      - name: Get tag message
+        id: tagmsg
+        run: |
+          # Show 1st line of tag and message, extract the message part, and get the first two words after tag name
+          echo "tag description = $(git tag -l -n1 "v${{ env.version }}")"
+          MESSAGE=$(git tag -l -n1 "v${{ env.version }}" | awk '{if (NF >= 3) print $2 " " $3 }')
+          echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+          echo "message=$MESSAGE"
+
+      - name: Cancel if tag message is not a version bump
+        if: ${{ startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
+        run: |
+          echo "Tag message starts with 'Bump version'. Skipping workflow."
+#          exit 1
 
 #    TODO: checkout branch on which the tag was created (not linked to tag, need to search (branch -r ...))
 

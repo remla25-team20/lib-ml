@@ -24,6 +24,7 @@ jobs:
           # Show 1st line of tag and message, extract the message part, and get the first two words after tag name
           MESSAGE=$(git tag -l -n1 "v${{ env.version }}" | awk '{if (NF >= 3) print $2 " " $3 }')
           echo "message=$MESSAGE" >> "$GITHUB_OUTPUT"
+          echo "message=$MESSAGE"
 
       - name: Cancel if tag message is not a version bump
         if: ${{ startsWith(steps.tagmsg.outputs.message, 'Bump version') }}

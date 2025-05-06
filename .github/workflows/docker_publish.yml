@@ -45,19 +45,6 @@ jobs:
           echo "Tag message starts with 'Bump version'. Skipping workflow."
 #          exit 1
 
-      - name: Parse version info from tag
-        if: ${{ !startsWith(steps.tagmsg.outputs.message, 'Bump version') }}
-        run: |
-          # GITHUB_REF is like refs/tags/v2.3.5, so strip the first 11 chars
-          VERSION=${GITHUB_REF:11}
-          MAJOR=`echo "$VERSION" | cut -d . -f 1`
-          MINOR=`echo "$VERSION" | cut -d . -f 2`
-          PATCH=`echo "$VERSION" | cut -d . -f 3`
-          echo "version=$VERSION" >> $GITHUB_ENV
-          echo "version_major=$MAJOR" >> $GITHUB_ENV
-          echo "version_minor=$MINOR" >> $GITHUB_ENV
-          echo "version_patch=$PATCH" >> $GITHUB_ENV
-
 #    TODO: checkout branch on which the tag was created (not linked to tag, need to search (branch -r ...))
 
       - name: Bump lib-ml package version

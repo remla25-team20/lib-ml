@@ -18,6 +18,10 @@ from sklearn.preprocessing import FunctionTransformer
 from sklearn.pipeline import make_union
 from joblib import dump
 
+try:
+    nltk.data.find("corpora/stopwords")
+except LookupError:
+    nltk.download("stopwords")
 
 def _load_data(path: Path):
     reviews = pd.read_csv(

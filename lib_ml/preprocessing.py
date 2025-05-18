@@ -29,7 +29,8 @@ def _load_data(path: Path):
 
 def _text_process(text: str):
     all_stopwords = stopwords.words('english')
-    all_stopwords.remove('not', 'but')
+    for stopword in ['not', 'but']:
+        all_stopwords.remove(stopword)
     ps = PorterStemmer()
 
     review = re.sub('[^a-zA-Z]', ' ', text)

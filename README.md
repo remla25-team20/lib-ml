@@ -5,7 +5,7 @@ Utilities for preprocessing text data.
 ## Install
 
 ```bash
-pip install https://github.com/remla25-team20/lib-ml/releases/download/v0.1.3/lib_ml-0.1.3-py3-none-any.whl
+pip install https://github.com/remla25-team20/lib-ml/releases/download/v0.1.4/lib_ml-0.1.4-py3-none-any.whl
 ```
 
 ## Usage

@@ -48,6 +48,4 @@ def preprocess(path: Path):
                         analyzer=_text_process)
 
     preprocessed_data = preprocessor.fit_transform(reviews['Review'])
-    dump(preprocessor, 'output/preprocessor.joblib')
-    dump(preprocessed_data, 'output/preprocessed_data.joblib')
     return preprocessor, preprocessed_data

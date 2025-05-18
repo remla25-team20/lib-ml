@@ -13,7 +13,7 @@ pip install https://github.com/remla25-team20/lib-ml/releases/download/v0.1.3/li
 ```py
 from lib_ml.preprocessing import preprocess
 
-preprocessed_data = preprocess(path: Path)
+preprocessor, preprocessed_data = preprocess(path: Path)
 ```
 
 ## Output

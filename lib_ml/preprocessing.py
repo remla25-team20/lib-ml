@@ -32,14 +32,11 @@ def _text_process(text: str):
     for stopword in ['not', 'but']:
         all_stopwords.remove(stopword)
     ps = PorterStemmer()
-
     review = re.sub('[^a-zA-Z]', ' ', text)
     review = review.lower()
     review = review.split()
     review = [ps.stem(word) for word in review if not word in set(all_stopwords)]
-    cln_review = ' '.join(review)
-    
-    return cln_review
+    return review
 
 def preprocess(path: Path):
     reviews = _load_data(path)
